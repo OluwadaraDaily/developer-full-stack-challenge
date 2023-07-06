@@ -14,12 +14,6 @@ class User(UserBase):
   class Config:
     orm_mode = True
 
-class AuthorBase(BaseModel):
-  name: str
-
-class AuthorCreate(AuthorBase):
-  pass
-
 class BookBase(BaseModel):
   name: str
   pages: int
@@ -34,6 +28,13 @@ class Book(BookBase):
   class Config:
     orm_mode = True
 
+
+class AuthorBase(BaseModel):
+  name: str
+
+class AuthorCreate(AuthorBase):
+  pass
+
 class Author(AuthorBase):
   id: int
   books: List[Book] = []
@@ -47,6 +48,3 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
   username: Union[str, None] = None
-
-
-  

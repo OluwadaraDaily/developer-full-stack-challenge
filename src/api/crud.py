@@ -8,6 +8,10 @@ from typing import Union
 from fastapi import Depends, HTTPException, status
 from typing_extensions import Annotated
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from faker import Faker
+import random
+
+fake = Faker()
 
 import schemas
 
@@ -49,20 +53,24 @@ def create_user(db: Session, user: schemas.UserCreate):
   db.refresh(db_user)
   return db_user
 
-def fetch_authors(db: Session, offset: int = 0, limit: int = 20):
-  return db.query(models.Author).offset(offset).limit(limit).all()
+def fetch_authors(db: Session):
+  return db.query(models.Author).all()
 
-def fetch_books(db: Session, offset: int = 0, limit: int = 20):
-  return db.query(models.Book).offset(offset).limit(limit).all()
+def fetch_books(db: Session):
+  return db.query(models.Book).all()
 
 def get_book(db: Session, book_id: int):
   return db.query(models.Book).filter(models.Book.id == book_id).first()
 
+def fetch_authors(db: Session):
+  return db.query(models.Author).all()
+
 def get_author(db: Session, author_id: int):
   return db.query(models.Author).filter(models.Author.id == author_id).first()
 
-def fetch_author_books(db: Session, author_id: int, offset: int = 0, limit: int = 20):
-  return db.query(models.Book).filter(models.Book.author_id == author_id).offset(offset).limit(limit).all()
+
+def fetch_author_books(db: Session, author_id: int):
+  return db.query(models.Book).filter(models.Book.author_id == author_id).all()
 
 def get_book_author(db: Session, book_id: int):
   book = get_book(db, book_id)
@@ -75,8 +83,41 @@ def create_book(db: Session, book: schemas.BookCreate, author_id: int):
   db.refresh(db_book)
   return db_book
 
+def update_book(db: Session, book: schemas.BookCreate, author_id: int, book_id: int):
+  db_book = get_book(db=db, book_id=book_id)
+  if not db_book:
+    raise HTTPException(status_code=404, detail="Book not found")
+  book_data = book.dict(exclude_unset=True)
+  for key, value in book_data.items():
+    setattr(db_book, key, value)
+  setattr(db_book, 'author_id', author_id)
+  db.add(db_book)
+  db.commit()
+  db.refresh(db_book)
+  return db_book
+
+def delete_book(db: Session, author_id: int, book_id: int):
+  db_book = get_book(db=db, book_id=book_id)
+  if not db_book:
+    raise HTTPException(status_code=404, detail="Book not found")
+  db.delete(db_book)
+  db.commit()
+  return { "ok": True }
+
 def create_author(db: Session, author: schemas.AuthorCreate):
   db_author = models.Author(**author.dict())
+  db.add(db_author)
+  db.commit()
+  db.refresh(db_author)
+  return db_author
+
+def update_author(db: Session, author_id: int, author: schemas.AuthorCreate):
+  db_author = get_author(db=db, author_id=author_id)
+  if not db_author:
+    raise HTTPException(status_code=404, detail="Author not found")
+  author_data = author.dict(exclude_unset=True)
+  for key, value in author_data.items():
+    setattr(db_author, key, value)
   db.add(db_author)
   db.commit()
   db.refresh(db_author)
@@ -91,3 +132,21 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
   to_encode.update({"exp": expire})
   encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
   return encoded_jwt
+
+def seed_authors(db: Session, n=25):
+  for _ in range(n):
+    author_name = fake.name()
+    author_dict = schemas.AuthorCreate(name=author_name)
+    create_author(db=db, author=author_dict)
+
+def seed_books(db: Session):
+  authors = fetch_authors(db)
+  num_of_books = 3
+  for author in authors:
+    for _ in range(num_of_books):
+      book_name = fake.sentence(nb_words=3)
+      num_of_pages = random.randint(50, 150)
+      book_dict = schemas.BookCreate(name=book_name, pages=num_of_pages)
+
+      create_book(db=db, book=book_dict, author_id=author.id)
+    num_of_books += 1
