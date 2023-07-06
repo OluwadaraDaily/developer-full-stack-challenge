@@ -1,0 +1,12 @@
+body {
+  height: 100vh;
+
+  #__nuxt {
+    height: inherit;
+
+    #__layout {
+      height: inherit;
+    }
+  }
+
+}
