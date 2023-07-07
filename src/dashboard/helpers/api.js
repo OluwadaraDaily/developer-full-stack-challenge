@@ -1,5 +1,19 @@
 import { axios } from './axiosConfig';
 
+async function login(payload) {\
+  axios.defaults.headers.post["Content-Type"] = "multipart/form-data"
+  const response = await axios.post("/token", payload)
+  return response;
+}
+
+async function getToken() {
+
+}
+
+async function verifyToken() {
+
+}
+
 async function fetchAuthors () {
   const response = await axios.get('/authors');
   return response; 
@@ -65,5 +79,6 @@ export default {
   createBook,
   updateBook,
   getBook,
-  deleteBook
+  deleteBook,
+  login
 }

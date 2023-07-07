@@ -2,9 +2,9 @@
   <b-navbar toggleable="lg" type="dark" variant="dark">
     <b-navbar-brand>AuthBooks</b-navbar-brand>
 
-    <b-navbar-toggle target="nav-collapse" v-if="tokenAvailable"></b-navbar-toggle>
+    <b-navbar-toggle target="nav-collapse" v-if="isUserLoggedIn"></b-navbar-toggle>
 
-    <b-collapse id="nav-collapse" is-nav v-if="tokenAvailable">
+    <b-collapse id="nav-collapse" is-nav v-if="isUserLoggedIn">
       <b-navbar-nav class="mx-auto">
         <b-nav-item>
           <NuxtLink to="/authors">Authors</NuxtLink>
@@ -14,7 +14,7 @@
         </b-nav-item>
       </b-navbar-nav>
 
-      <b-navbar-nav class="ml-auto" v-if="tokenAvailable">
+      <b-navbar-nav class="ml-auto" v-if="isUserLoggedIn">
         <b-nav-item>
           <b-button variant="dark" @click="logout">Logout</b-button>
         </b-nav-item>
@@ -27,29 +27,18 @@
 export default {
   name: 'Header',
   data() {
-    return {
-      tokenAvailable: false
-    }
+    return {}
   },
   methods: {
-    logout() {
-      localStorage.removeItem('token')
+    async logout() {
+      await this.$store.dispatch("logout")
       this.$router.push({ path: '/' })
-    },
-    isTokenAvailable() {
-      console.log('localStorage.getItem ->', localStorage.getItem('token'))
-      if (localStorage.getItem('token') !== null || localStorage.getItem('token')) {
-        this.tokenAvailable = true
-      } else {
-        this.tokenAvailable = false
-      }
-      console.log('tokenAvailable ->', this.tokenAvailable)
     }
   },
   computed: {
-  },
-  async mounted() {
-    this.isTokenAvailable()
+    isUserLoggedIn() {
+      return this.$store.getters["getLoggedInState"]
+    }
   }
 }
 </script>

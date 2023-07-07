@@ -54,59 +54,24 @@ export default {
   },
   methods: {
     async submitLoginForm() {
-      try {
-        let formData = new FormData()
-        formData.append('username', this.form.username)
-        formData.append('password', this.form.password)
-        const options = {
-          method: 'POST',
-          body: formData
-        }
-        const response = await fetch(`${this.baseUrl}/token`, options)
-          
-        if (response.status === 200) {
-          console.log('Response OK!')
-          console.log('RESPONSE ->', response)
-          const data = await response.json()
-          console.log('DATA ->', data)
-          // Set localStorage with token
-          localStorage.setItem('token', `Bearer ${data.access_token}`)
+      let formData = new FormData()
+      formData.append('username', this.form.username)
+      formData.append('password', this.form.password)
 
-          console.log('LocalStorage =>', localStorage)
-          // Login
-
-          this.$router.push({ path: '/authors' })
-        } else {
-          throw new Error(`${response.status}: ${response.statusText}`)
-        }
-      } catch (error) {
-        // Display error message
-        console.log(error.message)
-      }
-    },
-    async isTokenViable() {
-      try {
-        const options = {
-          method: 'GET',
-          headers: {
-            "Authorization": localStorage.getItem('token')
-          }
-        }
-        const response = await fetch(`${this.baseUrl}/users`, options)
-        console.log('Response ->', response)
-        if (response.status === 200) {
-          return true;
-        }
-      } catch (error) {
-        // Display error message
-        console.log(error.message)
+      const loginResponse = await this.$store.dispatch("login", formData)
+      if (loginResponse.isSuccess) {
+        this.$router.push({ path: '/authors' })
       }
     }
   },
+  computed: {
+    isUserLoggedIn() {
+      return this.$store.state.isLoggedIn
+    }
+  },
   async mounted() {
-    // Check if localStorage token is still viable
-    const isTokenViable = await this.isTokenViable()
-    if (!!isTokenViable) {
+    // If logged in, push to authors page
+    if (this.isUserLoggedIn) {
       this.$router.push({ path: '/authors' })
     }
   }

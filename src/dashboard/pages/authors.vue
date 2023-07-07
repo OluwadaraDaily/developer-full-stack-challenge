@@ -334,7 +334,7 @@ export default {
         bookId: this.currentBook.id
       }
       await this.$store.dispatch("authors/deleteBook", payload)
-      
+
       this.$bvModal.hide('edit-book-modal')
     },
     async rowClicked(item, index, event) {
@@ -387,7 +387,6 @@ export default {
   },
   async fetch() {
     const allAuthorsResponse = await this.$store.dispatch('authors/fetchAllAuthors')
-    // console.log('allAuthorsResponse =>', allAuthorsResponse)
     if (!allAuthorsResponse.isSuccess) {
       this.fetchError = allAuthorsResponse.message
       $fetchState.error = true

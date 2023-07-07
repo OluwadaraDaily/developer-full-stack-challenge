@@ -6,7 +6,6 @@
 </template>
 
 <script>
-import api from '../helpers/api'
 import Header from '../components/Header/Header.vue'
 export default {
   components: {
@@ -16,11 +15,16 @@ export default {
     return {}
   },
   methods: {},
+  computed: {
+    isUserLoggedIn() {
+      return this.$store.getters["getLoggedInState"]
+    }
+  },
   async mounted() {
-    // const isTokenValid = await api.isTokenViable()
-    // if (!isTokenValid) {
-    //   this.$router.push({ path: '/' })
-    // }
+    await this.$store.dispatch("refreshToken")
+    if (!this.isUserLoggedIn) {
+      this.$router.push({ path: '/' })
+    }
   }
 }
 </script>

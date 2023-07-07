@@ -3,6 +3,7 @@
     <p v-if="$fetchState.pending">Fetching books...</p>
     <p v-else-if="$fetchState.error">An error occurred :(</p>
     <div v-else>
+      <!-- Top Section -->
       <div class="row mt-5">
         <div class="col-10 mx-auto">
           <div class="row">
@@ -27,9 +28,12 @@
           </div>
         </div>
       </div>
+
+      <!-- Books Table -->
       <div class="col-10 mt-3 mx-auto">
         <b-table
           striped
+          responsive
           hover 
           :items="booksList"
           :fields="fields"
@@ -61,7 +65,7 @@
         @hidden="resetModal"
         @ok="handleAddBookModalOk"
       >
-        <b-form @submit.prevent="handleSubmit" ref="form1">
+        <b-form ref="form1">
           <b-form-group
             id="input-group-1"
             label="Book Name"
@@ -123,7 +127,7 @@
         @hidden="resetEditModal"
         @ok="handleEditBookModalOk"
       >
-        <b-form @submit.prevent="handleSubmit" ref="form4">
+        <b-form ref="form4">
           <b-form-group
             id="input-group-1"
             label="Book Name"
@@ -192,6 +196,7 @@ export default {
   },
   data() {
     return {
+      fetchError: "",
       fields: [
         { key: 'id', thClass: 'd-none', tdClass: 'd-none' },
         { key: 'name' },
@@ -201,7 +206,6 @@ export default {
       ],
       books: [],
       authors: [],
-      authorOptions: [],
       filter: '',
       perPage: 10,
       currentPage: 1,
@@ -243,15 +247,8 @@ export default {
       return validForm4 && validForm5 && validForm6
     },
     async rowClicked(item, index, event) {
-      console.log('Item ->', item)
-      console.log('Index ->', index)
-      console.log('Event ->', event)
-      // const authorId = item.id
-      // const authorResponse = await api.getAuthor(authorId)
-      // this.currentAuthor = authorResponse.data
-      this.currentBookData = item
-      console.log('currentBookData ->', this.currentBookData)
-      // Open Modal
+      this.currentBookData = {...item}
+
       this.$bvModal.show('edit-book-modal')
     },
     resetModal() {
@@ -265,79 +262,70 @@ export default {
       this.authorState = null
     },
     resetEditModal() {
-      // this.currentBookData = {}
+      this.currentBookData = {}
+      this.editBookState = null
+      this.editNumberOfPagesState = null
     },
     async handleAddBookModalOk(bvModalEvent) {
-      // Prevent modal from closing
+      // Prevent modal from closing & Trigger submit handler
       bvModalEvent.preventDefault()
-      // Trigger submit handler
       await this.handleAddBookSubmit()
     },
     async handleEditBookModalOk(bvModalEvent) {
-      // Prevent modal from closing
+      // Prevent modal from closing & Trigger submit handler
       bvModalEvent.preventDefault()
-      // Trigger submit handler
       await this.handleEditBookSubmit()
     },
     async handleAddBookSubmit() {
-      // Exit when the form isn't valid
       if (!this.checkAddBookFormValidity()) {
         return
       }
       // Create new Book
-      const payload = {...this.book }
-      if (!!this.author) {
-        console.log('Author ->', this.author)
-        await api.createBook(this.author, payload)
-        // Hide the modal
-        this.$bvModal.hide('add-book-modal')
+      const payload = {
+        authorId: this.author,
+        ...this.book
       }
+      await this.$store.dispatch("books/createBook", payload)
+
+      this.$bvModal.hide('add-book-modal')
     },
     async handleEditBookSubmit() {
-      // Exit when the form isn't valid
       if (!this.checkEditBookFormValidity()) {
         return
       }
       // Update Book
       const payload = {
+        authorId: this.currentBookData.author_id,
+        bookId: this.currentBookData.id,
         name: this.currentBookData.name,
         pages: this.currentBookData.number_of_pages
       }
-      console.log('Payload ->', payload)
-      console.log('Author ID ->', this.currentBookData.author_id)
-      console.log('BOOK ID ->', this.currentBookData.id)
-      await api.updateBook(this.currentBookData.author_id, this.currentBookData.id, payload)
-      // Hide the modal
+      await this.$store.dispatch("books/updateBook", payload)
+
       this.$bvModal.hide('edit-book-modal')
     }
   },
   computed: {
     booksList() {
-      return this.books.map((book) => ({
-        id: book.id,
-        name: book.name,
-        author: this.authors.find(author => author.id === book.author_id).name,
-        number_of_pages: book.pages,
-        author_id: this.authors.find(author => author.id === book.author_id).id,
-      }))
+      return this.$store.getters["books/getBooksList"]
     },
     rows() {
-      return this.books.length
+      return this.$store.getters["books/getBooksList"].length
+    },
+    authorOptions() {
+      return this.$store.getters["authors/getAllAuthors"].map((author) => ({
+        id: author.id,
+        label: author.name
+      }))
     }
   },
+  async mounted() {
+    await this.$store.dispatch("authors/fetchAllAuthors")
+  },
   async fetch() {
-    const booksResponse = await api.fetchBooks()
-    const authorsResponse = await api.fetchAuthors()
-    console.log('Response 1 ->', booksResponse)
-    console.log('Response 2 ->', authorsResponse)
-    if (booksResponse.status === 200 && authorsResponse.status === 200) {
-      this.books = booksResponse.data
-      this.authors = authorsResponse.data
-      this.authorOptions = authorsResponse.data.map((item) => ({
-        id: item.id,
-        label: item.name
-      }))
-    } else {
+    const booksListResponse = await this.$store.dispatch("books/fetchBooks")
+    if (!booksListResponse.isSuccess) {
+      this.fetchError = booksListResponse.message
       $fetchState.error = true
     }
   }
