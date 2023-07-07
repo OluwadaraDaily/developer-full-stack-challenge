@@ -1,7 +1,7 @@
 <template>
   <div>
     <p v-if="$fetchState.pending">Fetching authors...</p>
-    <p v-else-if="$fetchState.error">An error occurred :(</p>
+    <p v-else-if="$fetchState.error">An error occurred: {{ fetchError }}</p>
     <div v-else>
       <div class="row mt-5">
         <div class="col-10 mx-auto">
@@ -58,9 +58,9 @@
         title="Add Author"
         @show="resetModal"
         @hidden="resetModal"
-        @ok="handleOk"
+        @ok="handleAddAuthorModalOk"
       >
-        <b-form @submit.prevent="handleSubmit" ref="form1">
+        <b-form ref="form1">
           <b-form-group
             id="input-group-1"
             label="Author's Name"
@@ -89,79 +89,94 @@
       <b-modal 
         id="edit-modal"
         title="Edit Author"
-        @hidden="resetModal"
+        @hidden="resetEditModal"
         @ok="handleEditOk"
       >
-        <b-form @submit.prevent="handleSubmit" ref="form2">
+        <b-form ref="form2">
           <b-form-group
-            id="input-group-1"
             label="Author's Name"
             label-for="input-1"
             invalid-feedback="Name is required"
-            :state="authorsNameState"
+            :state="currentAuthorState"
           >
             <b-form-input
               id="input-1"
               type="text"
               placeholder="Author's Name"
               required
-              v-model="currentAuthor.name"
+              v-model="currentAuthorData.name"
               :state="currentAuthorState"
             ></b-form-input>
           </b-form-group>
         </b-form>
-        <b-form ref="form3">
-          <b-form-group>
-            <div class="row">
-              <div class="col-8">
+
+        <!-- Add Book Form -->
+        <hr/>
+        <div class="row">
+          <div class="col-8">
+            <b-form ref="form3">
+              <b-form-group
+                label="Book name"
+                invalid-feedback="Book name is required"
+                :state="bookNameState"
+              >
                 <b-form-input
                   type="text"
                   placeholder="Book Name"
                   required
+                  invalid-feedback="Book name is required"
                   v-model="book.name"
                   :state="bookNameState"
                 ></b-form-input>
+              </b-form-group>
+            </b-form>
               </div>
               <div class="col-4">
-                <b-form-input
-                  type="number"
-                  placeholder="Pages"
-                  required
-                  v-model="book.pages"
-                ></b-form-input>
+                <b-form ref="form4">
+                  <b-form-group
+                    label="Pages"
+                    invalid-feedback="Number of pages is required"
+                    :state="numberOfPagesState"
+                  >
+                    <b-form-input
+                      type="number"
+                      placeholder="Pages"
+                      required
+                      v-model="book.pages"
+                      :state="numberOfPagesState"
+                    ></b-form-input>
+                  </b-form-group>
+                </b-form>
               </div>
-            </div>
-            <b-button class="mt-2" @click="createBook">Add Book</b-button>
-          </b-form-group>
-        </b-form>
+        </div>
+        <b-button class="mt-2" @click="createBook">Add Book</b-button>
+
+        <!-- Author's Books Table -->
         <b-table
           striped
           hover
-          :items="currentAuthor.books"
+          :items="currentAuthorData.books"
           :fields="editAuthorBooksFields"
           class="mt-2"
           @row-clicked="bookRowClicked"
         >
-        <template #cell(delete)>
-          <b-button>Delete</b-button>
-        </template>
         </b-table>
       </b-modal>
 
       <!-- Edit Book Modal -->
       <b-modal 
         id="edit-book-modal"
-        title="Edit Author"
-        @hidden="resetModal"
+        title="Edit Book"
+        @hidden="resetEditBookModal"
         @ok="handleBookEditOk"
       >
-        <b-form ref="form4">
+        <b-form ref="form5">
           <b-form-group
             id="input-group-1"
             label="Book Name"
             label-for="input-1"
             invalid-feedback="Book Name is required"
-            :state="bookNameState"
+            :state="currentBookState"
           >
             <b-form-input
               id="input-1"
@@ -192,11 +207,13 @@
 
 <script>
 import api from '../helpers/api'
+import { mapMutations, mapGetters } from 'vuex'
+
 export default {
   name: 'Authors',
   data() {
     return {
-      items: [],
+      fetchError: null,
       fields: [
         { key: 'id', label: 'ID', thClass: 'd-none', tdClass: 'd-none' },
         { key: 'name', label: 'Name' },
@@ -218,6 +235,7 @@ export default {
         pages: 0
       },
       bookNameState: null,
+      numberOfPagesState: null,
       currentBook: {},
       currentBookState: null
     }
@@ -234,9 +252,11 @@ export default {
       return valid
     },
     checkBookFormValidity() {
-      const valid = this.$refs.form3.checkValidity()
-      this.bookNameState = valid
-      return valid
+      const validForm3 = this.$refs.form3.checkValidity()
+      const validForm4 = this.$refs.form4.checkValidity()
+      this.bookNameState = validForm3
+      this.numberOfPagesState = validForm4
+      return validForm3 && validForm4
     },
     checkEditBookFormValidity() {
       const valid = this.$refs.form4.checkValidity()
@@ -247,26 +267,30 @@ export default {
       this.authorsName = ''
       this.authorsNameState = null
     },
-    async handleOk(bvModalEvent) {
-      // Prevent modal from closing
+    resetEditModal() {
+      this.currentAuthor = {}
+      this.currentAuthorState = null
+    },
+    resetEditBookModal() {
+      this.currentBookState = null
+      this.currentBook = {}
+    },
+    async handleAddAuthorModalOk(bvModalEvent) {
+      // Prevent modal from closing & trigger submit handler
       bvModalEvent.preventDefault()
-      // Trigger submit handler
-      await this.handleSubmit()
+      await this.handleAddAuthorSubmit()
     },
     handleEditOk(bvModalEvent) {
-      // Prevent modal from closing
+      // Prevent modal from closing & trigger submit handler
       bvModalEvent.preventDefault()
-      // Trigger submit handler
-      this.handleEditSubmit()
+      this.handleEditAuthorSubmit()
     },
     handleBookEditOk(bvModalEvent) {
-      // Prevent modal from closing
+      // Prevent modal from closing & trigger submit handler
       bvModalEvent.preventDefault()
-      // Trigger submit handler
       this.handleBookEditSubmit()
     },
-    async handleSubmit() {
-      // Exit when the form isn't valid
+    async handleAddAuthorSubmit() {
       if (!this.checkFormValidity()) {
         return
       }
@@ -274,45 +298,49 @@ export default {
       const payload = {
         name: this.authorsName
       }
-      await api.createAuthor(payload)
-      // Hide the modal
+      await this.$store.dispatch("authors/createAuthor", payload)
       this.$bvModal.hide('author-modal')
     },
-    async handleEditSubmit() {
-      // Exit when the form isn't valid
+    async handleEditAuthorSubmit() {
       if (!this.checkEditFormValidity()) {
         return
       }
       // Update Author
       const payload = {
+        id: this.currentAuthor.id,
         name: this.currentAuthor.name
       }
-      await api.updateAuthor(this.currentAuthor.id, payload)
+      await this.$store.dispatch("authors/updateAuthor", payload)
       this.$bvModal.hide('edit-modal')
     },
     async handleBookEditSubmit() {
-      // Exit when the form isn't valid
       if (!this.checkEditBookFormValidity()) {
         return
       }
       // Update Book
       const payload = {
+        authorId: this.currentAuthor.id,
+        bookId: this.currentBook.id,
         name: this.currentBook.name,
         pages: this.currentBook.pages
       }
-      await api.updateBook(this.currentAuthor.id, this.currentBook.id, payload)
+      await this.$store.dispatch("authors/updateBook", payload)
+
       this.$bvModal.hide('edit-book-modal')
     },
     async deleteCurrentBook() {
-      await api.deleteBook(this.currentAuthor.id, this.currentBook.id)
+      const payload = {
+        authorId: this.currentAuthor.id,
+        bookId: this.currentBook.id
+      }
+      await this.$store.dispatch("authors/deleteBook", payload)
+      
       this.$bvModal.hide('edit-book-modal')
     },
     async rowClicked(item, index, event) {
       const authorId = item.id
-      const authorResponse = await api.getAuthor(authorId)
-      this.currentAuthor = authorResponse.data
-
-      // Open Modal
+      const currentAuthorResponse = await this.$store.dispatch("authors/getCurrentAuthor", authorId)
+      this.currentAuthor = currentAuthorResponse.data
       this.$bvModal.show('edit-modal')
     },
     async bookRowClicked(item, index, event) {
@@ -327,34 +355,41 @@ export default {
       if (!this.checkBookFormValidity()) {
         return
       }
-      await api.createBook(this.currentAuthor.id, this.book)
+      const payload = {
+        id: this.currentAuthor.id,
+        ...this.book
+      }
+      this.$store.dispatch("authors/createBook", payload)
+
       this.book = {
         name: '',
         pages: 0
       }
-    },
-    async openEditBookModal() {
-      this.$bvModal.show('edit-book-modal')
+      this.bookNameState = null
+      this.numberOfPagesState = null
     }
   },
   computed: {
+    ...mapGetters(["getAllAuthors"]),
     authorsList() {
-      return this.items.map((author) => ({
+      return this.$store.getters["authors/getAllAuthors"].map((author) => ({
         id: author.id,
         name: author.name,
         number_of_books: author.books.length
       }))
     },
+    currentAuthorData() {
+      return this.$store.getters["authors/getCurrentAuthor"]
+    },
     rows() {
-      return this.items.length
+      return this.$store.getters["authors/getAllAuthors"].length
     }
   },
   async fetch() {
-    const response = await api.fetchAuthors()
-    console.log('Response ->', response)
-    if (response.status === 200) {
-      this.items = response.data
-    } else {
+    const allAuthorsResponse = await this.$store.dispatch('authors/fetchAllAuthors')
+    // console.log('allAuthorsResponse =>', allAuthorsResponse)
+    if (!allAuthorsResponse.isSuccess) {
+      this.fetchError = allAuthorsResponse.message
       $fetchState.error = true
     }
   }
