@@ -6,18 +6,16 @@
 
     <b-collapse id="nav-collapse" is-nav v-if="isUserLoggedIn">
       <b-navbar-nav class="mx-auto">
-        <b-nav-item>
-          <NuxtLink to="/authors">Authors</NuxtLink>
+        <b-nav-item to="/authors">
+          Authors
         </b-nav-item>
-        <b-nav-item>
-          <NuxtLink to="/books">Books</NuxtLink>
+        <b-nav-item to="/books">
+          Books
         </b-nav-item>
       </b-navbar-nav>
 
       <b-navbar-nav class="ml-auto" v-if="isUserLoggedIn">
-        <b-nav-item>
-          <b-button variant="dark" @click="logout">Logout</b-button>
-        </b-nav-item>
+        <b-button variant="dark" @click="logout">Logout</b-button>
       </b-navbar-nav>
     </b-collapse>
   </b-navbar>
