@@ -1,6 +1,6 @@
 import { axios } from './axiosConfig';
 
-async function login(payload) {\
+async function login(payload) {
   axios.defaults.headers.post["Content-Type"] = "multipart/form-data"
   const response = await axios.post("/token", payload)
   return response;
