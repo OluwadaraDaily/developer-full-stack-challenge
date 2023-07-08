@@ -22,8 +22,8 @@ SECRET_KEY = "affd16f38420f41a19094732d9288056a094e56ed0adb9191e84317bd6317be7"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-def fetch_users(db: Session, offset: int = 0, limit: int = 100):
-  return db.query(models.User).offset(offset).limit(limit).all()
+def fetch_users(db: Session):
+  return db.query(models.User).all()
 
 def get_user(db: Session, user_id: int):
   return db.query(models.User).filter(models.User.id == user_id).first()
@@ -53,6 +53,14 @@ def create_user(db: Session, user: schemas.UserCreate):
   db.refresh(db_user)
   return db_user
 
+def delete_user(db: Session, user_id: int):
+  db_user = get_user(db=db, user_id=user_id)
+  if not db_user:
+    raise HTTPException(status_code=404, detail="User not found")
+  db.delete(db_user)
+  db.commit()
+  return { "ok": True }
+
 def fetch_authors(db: Session):
   return db.query(models.Author).all()
 
@@ -68,13 +76,20 @@ def fetch_authors(db: Session):
 def get_author(db: Session, author_id: int):
   return db.query(models.Author).filter(models.Author.id == author_id).first()
 
-
 def fetch_author_books(db: Session, author_id: int):
   return db.query(models.Book).filter(models.Book.author_id == author_id).all()
 
 def get_book_author(db: Session, book_id: int):
   book = get_book(db, book_id)
   return db.query(models.Author).filter(models.Author.id == book.author_id).first()
+
+def delete_author(db: Session, author_id: int):
+  db_author = get_author(db=db, author_id=author_id)
+  if not db_author:
+    raise HTTPException(status_code=404, detail="Author not found")
+  db.delete(db_author)
+  db.commit()
+  return { "ok": True }
 
 def create_book(db: Session, book: schemas.BookCreate, author_id: int):
   db_book = models.Book(**book.dict(), author_id = author_id)
@@ -150,3 +165,7 @@ def seed_books(db: Session):
 
       create_book(db=db, book=book_dict, author_id=author.id)
     num_of_books += 1
+
+def seed_users(db: Session):
+  user_dict = schemas.UserCreate(username="Admin", password="adminsecret")
+  create_user(db=db, user=user_dict)

@@ -63,6 +63,7 @@ def read_root():
 
 @app.post("/seed")
 def seed_database(db: Session = Depends(get_db)):
+  crud.seed_users(db=db)
   crud.seed_authors(db=db)
   crud.seed_books(db=db)
   return { "message": "Database seeded successfully" }
@@ -92,7 +93,7 @@ def fetch_users(token: Annotated[str, Depends(oauth2_scheme)], db: Session = Dep
   return users
 
 @app.post("/users", response_model=schemas.User)
-def create_user(token: Annotated[str, Depends(oauth2_scheme)], user: schemas.UserCreate, db: Session = Depends(get_db)):
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
   db_user = crud.get_user_by_username(db, username = user.username)
   if db_user:
     raise HTTPException(status_code=400, detail="Username already registered")
@@ -102,6 +103,11 @@ def create_user(token: Annotated[str, Depends(oauth2_scheme)], user: schemas.Use
 def get_user(user_id: int, db: Session = Depends(get_db)):
   db_user = crud.get_user(db, user_id)
   return db_user
+
+@app.delete("/users/{user_id}")
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+  response = crud.delete_user(db=db, user_id=user_id)
+  return response
 
 @app.post("/authors", response_model=schemas.Author)
 def create_author(author: schemas.AuthorCreate, token: Annotated[str, Depends(oauth2_scheme)], db: Session = Depends(get_db)):
@@ -122,6 +128,11 @@ def fetch_authors(token: Annotated[str, Depends(oauth2_scheme)], db: Session = D
 def get_author(author_id: int, token: Annotated[str, Depends(oauth2_scheme)], db: Session = Depends(get_db)):
   db_author = crud.get_author(db=db, author_id=author_id)
   return db_author
+
+@app.delete("/authors/{author_id}")
+def delete_author(author_id: int, token: Annotated[str, Depends(oauth2_scheme)], db: Session = Depends(get_db)):
+  delete_author_response = crud.delete_author(db=db, author_id=author_id)
+  return delete_author_response
 
 @app.get("/books", response_model=List[schemas.Book])
 def fetch_books(token: Annotated[str, Depends(oauth2_scheme)], db: Session = Depends(get_db)):
