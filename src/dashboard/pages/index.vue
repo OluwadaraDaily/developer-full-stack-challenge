@@ -12,6 +12,7 @@
           placeholder="Username"
           required
           v-model="form.username"
+          data-cy="username-input"
         ></b-form-input>
       </b-form-group>
       <b-form-group
@@ -19,6 +20,7 @@
         label="Password"
         label-for="input-1"
         description="Ensure it is secret..."
+        data-cy="password-input"
       >
         <b-form-input
           id="input-2"
@@ -30,7 +32,7 @@
       </b-form-group>
       <b-row>
         <b-col align-self="end">
-          <b-button variant="outline-primary" type="submit">Login</b-button>
+          <b-button variant="outline-primary" type="submit" data-cy="submit-login">Login</b-button>
         </b-col>
       </b-row>
     </b-form>

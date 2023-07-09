@@ -1,0 +1,6 @@
+{
+  "loginSuccessful": {
+    "access_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJPbHV3YWRhcmEiLCJleHAiOjE2ODg5MTg3NzB9.B_DRzaf8fxpgcLxDVcjjuAC02aWEh6Eq_J5OtXotvcw",
+    "token_type":"bearer"
+  }
+}

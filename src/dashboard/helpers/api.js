@@ -60,19 +60,9 @@ async function deleteBook(authorId, bookId) {
   return response;
 }
 
-async function isTokenViable() {
-  const response = await axios.get(`/users`)
-  if (response.status === 200) {
-    return true;
-  } else {
-    return false
-  }
-}
-
 export default {
   fetchAuthors,
   fetchBooks,
-  isTokenViable,
   createAuthor,
   getAuthor,
   updateAuthor,
