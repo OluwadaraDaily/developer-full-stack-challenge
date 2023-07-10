@@ -60,7 +60,7 @@
         title="Add Author"
         @show="resetModal"
         @hidden="resetModal"
-        @ok="handleAddAuthorModalOk"
+        @ok="handleModalOk($event, ['form1'], 'add-author')"
       >
         <b-form ref="form1">
           <b-form-group
@@ -68,7 +68,7 @@
             label="Author's Name"
             label-for="input-1"
             invalid-feedback="Name is required"
-            :state="authorsNameState"
+            :state="states.form1.state"
           >
             <b-form-input
               id="input-1"
@@ -76,7 +76,7 @@
               placeholder="Author's Name"
               required
               v-model="authorsName"
-              :state="authorsNameState"
+              :state="states.form1.state"
               data-cy="author-name-input"
             ></b-form-input>
           </b-form-group>
@@ -88,14 +88,14 @@
         id="edit-modal"
         title="Edit Author"
         @hidden="resetEditModal"
-        @ok="handleEditOk"
+        @ok="handleModalOk($event, ['form2'], 'edit-author')"
       >
         <b-form ref="form2">
           <b-form-group
             label="Author's Name"
             label-for="input-1"
             invalid-feedback="Name is required"
-            :state="currentAuthorState"
+            :state="states.form2.state"
           >
             <b-form-input
               id="input-1"
@@ -103,7 +103,7 @@
               placeholder="Author's Name"
               required
               v-model="currentAuthorData.name"
-              :state="currentAuthorState"
+              :state="states.form2.state"
               data-cy="edit-author-name-input"
             ></b-form-input>
           </b-form-group>
@@ -135,7 +135,7 @@
         id="edit-book-modal"
         title="Edit Book"
         @hidden="resetEditBookModal"
-        @ok="handleBookEditOk"
+        @ok="handleModalOk($event, ['form5'], 'edit-book')"
       >
         <b-form ref="form5">
           <b-form-group
@@ -143,7 +143,7 @@
             label="Book Name"
             label-for="input-1"
             invalid-feedback="Book Name is required"
-            :state="currentBookState"
+            :state="states.form5.state"
           >
             <b-form-input
               id="input-1"
@@ -152,10 +152,18 @@
               class="mb-2"
               required
               v-model="currentBook.name"
-              :state="currentBookState"
+              :state="states.form5.state"
               data-cy="book-name-input"
             ></b-form-input>
-
+          </b-form-group>
+        </b-form>
+        <b-form ref="form6">
+          <b-form-group
+            label="Number of Pages"
+            label-for="input-1"
+            invalid-feedback="Number of pages is required"
+            :state="states.form6.state"
+          >
             <b-form-input
               id="input-1"
               type="number"
@@ -163,11 +171,11 @@
               class="mb-2"
               required
               v-model="currentBook.pages"
-              :state="currentBookState"
+              :state="states.form6.state"
             ></b-form-input>
           </b-form-group>
-          <b-button variant="danger" @click="deleteCurrentBook">Delete</b-button>
         </b-form>
+        <b-button variant="danger" @click="deleteCurrentBook">Delete</b-button>
       </b-modal>
 
       <!-- Add Author Book Modal -->
@@ -175,7 +183,7 @@
         id="add-author-book-modal"
         title="Add Book"
         @hidden="resetAddAuthorBookModal"
-        @ok="handleAddAuthorBookOk"
+        @ok="handleModalOk($event, ['form3', 'form4'], 'add-book')"
       >
         <div class="row">
           <div class="col-8">
@@ -183,7 +191,7 @@
               <b-form-group
                 label="Book name"
                 invalid-feedback="Book name is required"
-                :state="bookNameState"
+                :state="states.form3.state"
               >
                 <b-form-input
                   type="text"
@@ -191,7 +199,7 @@
                   required
                   invalid-feedback="Book name is required"
                   v-model="book.name"
-                  :state="bookNameState"
+                  :state="states.form3.state"
                   data-cy="add-book-name-input"
                 ></b-form-input>
               </b-form-group>
@@ -202,14 +210,14 @@
               <b-form-group
                 label="Pages"
                 invalid-feedback="Number of pages is required"
-                :state="numberOfPagesState"
+                :state="states.form4.state"
               >
                 <b-form-input
                   type="number"
                   placeholder="Pages"
                   required
                   v-model="book.pages"
-                  :state="numberOfPagesState"
+                  :state="states.form4.state"
                   data-cy="add-page-number-input"
                 ></b-form-input>
               </b-form-group>
@@ -253,79 +261,95 @@ export default {
       bookNameState: null,
       numberOfPagesState: null,
       currentBook: {},
-      currentBookState: null
+      currentBookState: null,
+      states: {
+        form1: {
+          state: null
+        },
+        form2: {
+          state: null
+        },
+        form3: {
+          state: null
+        },
+        form4: {
+          state: null
+        },
+        form5: {
+          state: null
+        },
+        form6: {
+          state: null
+        }
+      }
     }
   },
   methods: {
-    checkFormValidity() {
-      const valid = this.$refs.form1.checkValidity()
-      this.authorsNameState = valid
-      return valid
-    },
-    checkEditFormValidity() {
-      const valid = this.$refs.form2.checkValidity()
-      this.currentAuthorState = valid
-      return valid
-    },
-    checkBookFormValidity() {
-      const validForm3 = this.$refs.form3.checkValidity()
-      const validForm4 = this.$refs.form4.checkValidity()
-      this.bookNameState = validForm3
-      this.numberOfPagesState = validForm4
-      return validForm3 && validForm4
-    },
-    checkEditBookFormValidity() {
-      const valid = this.$refs.form5.checkValidity()
-      this.currentBookState = valid
-      return valid
+    checkFormValidity(refTags) {
+      let validity = true
+      for (const refTag of refTags) {
+        const valid = this.$refs[`${refTag}`].checkValidity()
+        this.states[`${refTag}`].state = valid
+        validity = validity && valid
+      }
+      return validity
     },
     
     resetModal() {
       this.authorsName = ''
-      this.authorsNameState = null
+      this.states.form1.state = null
     },
     resetEditModal() {
       this.currentAuthor = {}
-      this.currentAuthorState = null
+      this.states.form2.state = null
     },
-    resetEditBookModal() {
-      this.currentBookState = null
+    async resetEditBookModal() {
+      this.states.form5.state = null
       this.currentBook = {}
+      await this.$store.dispatch("authors/getCurrentAuthor", this.currentAuthor.id)
       this.$bvModal.show('edit-modal')
     },
-    resetAddAuthorBookModal() {
+    async resetAddAuthorBookModal() {
       this.book = {
         name: '',
         pages: 0
       }
-      this.bookNameState = null
-      this.numberOfPagesState = null
+      this.states.form3.state = null
+      this.states.form4.state = null
+      await this.$store.dispatch("authors/getCurrentAuthor", this.currentAuthor.id)
       this.$bvModal.show("edit-modal")
     },
 
-    async handleAddAuthorModalOk(bvModalEvent) {
+    async handleModalOk(event, refTags, type) {
       // Prevent modal from closing & trigger submit handler
-      bvModalEvent.preventDefault()
-      await this.handleAddAuthorSubmit()
-    },
-    async handleEditOk(bvModalEvent) {
-      // Prevent modal from closing & trigger submit handler
-      bvModalEvent.preventDefault()
-      await this.handleEditAuthorSubmit()
-    },
-    async handleBookEditOk(bvModalEvent) {
-      // Prevent modal from closing & trigger submit handler
-      bvModalEvent.preventDefault()
-      await this.handleBookEditSubmit()
-    },
-    async handleAddAuthorBookOk(bvModalEvent) {
-      // Prevent modal from closing & trigger submit handler
-      bvModalEvent.preventDefault()
-      await this.handleAddAuthorBookSubmit()
+      event.preventDefault()
+      if (!this.checkFormValidity(refTags)) {
+        return
+      }
+      switch (type) {
+        case 'add-author':
+          await this.handleAddAuthorSubmit(refTags)
+          return;
+
+        case 'edit-author':
+          await this.handleEditAuthorSubmit(refTags)
+          return;
+
+        case 'edit-book':
+          await this.handleBookEditSubmit(refTags)
+          return;
+
+        case 'add-book':
+          await this.handleAddAuthorBookSubmit(refTags)
+          return;
+
+        default:
+          return; 
+      }
     },
 
-    async handleAddAuthorSubmit() {
-      if (!this.checkFormValidity()) {
+    async handleAddAuthorSubmit(refTags) {
+      if (!this.checkFormValidity(refTags)) {
         return
       }
       // Create new Author
@@ -335,25 +359,25 @@ export default {
       await this.$store.dispatch("authors/createAuthor", payload)
       this.$bvModal.hide('author-modal')
     },
-    async handleEditAuthorSubmit() {
-      if (!this.checkEditFormValidity()) {
+    async handleEditAuthorSubmit(refTags) {
+      if (!this.checkFormValidity(refTags)) {
         return
       }
       // Update Author
       const payload = {
-        id: this.currentAuthor.id,
-        name: this.currentAuthor.name
+        id: this.currentAuthorData.id,
+        name: this.currentAuthorData.name
       }
       await this.$store.dispatch("authors/updateAuthor", payload)
       this.$bvModal.hide('edit-modal')
     },
-    async handleBookEditSubmit() {
-      if (!this.checkEditBookFormValidity()) {
+    async handleBookEditSubmit(refTags) {
+      if (!this.checkFormValidity(refTags)) {
         return
       }
       // Update Book
       const payload = {
-        authorId: this.currentAuthor.id,
+        authorId: this.currentAuthorData.id,
         bookId: this.currentBook.id,
         name: this.currentBook.name,
         pages: this.currentBook.pages
@@ -362,8 +386,8 @@ export default {
 
       this.$bvModal.hide('edit-book-modal')
     },
-    async handleAddAuthorBookSubmit() {
-      if (!this.checkBookFormValidity()) {
+    async handleAddAuthorBookSubmit(refTags) {
+      if (!this.checkFormValidity(refTags)) {
         return
       }
       const payload = {
@@ -397,24 +421,6 @@ export default {
 
       this.$bvModal.show('edit-book-modal')
       this.$bvModal.hide('edit-modal')
-    },
-    async createBook() {
-      // Exit when the form isn't valid
-      if (!this.checkBookFormValidity()) {
-        return
-      }
-      const payload = {
-        id: this.currentAuthor.id,
-        ...this.book
-      }
-      this.$store.dispatch("authors/createBook", payload)
-
-      this.book = {
-        name: '',
-        pages: 0
-      }
-      this.bookNameState = null
-      this.numberOfPagesState = null
     },
     openAddBookModal() {
       this.$bvModal.show("add-author-book-modal")

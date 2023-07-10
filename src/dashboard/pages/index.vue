@@ -53,17 +53,12 @@ export default {
   },
   methods: {
     async submitLoginForm() {
-      console.log('Here 1')
       let formData = new FormData()
       formData.append('username', this.form.username)
       formData.append('password', this.form.password)
       
-      console.log('Here 2')
       const loginResponse = await this.$store.dispatch("login", formData)
-      console.log('Here 3')
-      console.log('loginResponse ->', loginResponse)
       if (loginResponse.isSuccess) {
-        console.log('Here 4')
         this.$router.push({ path: '/authors' })
       }
     }
