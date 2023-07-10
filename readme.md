@@ -54,3 +54,23 @@ The modal to add/edit a book should have three fields:
 
 ## Notes
 The usage of the provided template is mandatory. Submissions not written in this template, will not be reviewed. Writing tests is not mandatory, but doing so will give you bonus points. Please fork this repository and provide us a link to a public GitHub repository.
+
+## Setup
+
+- API
+  - Create a virtual environment for the API by following this [step-by-step procedure](https://www.freecodecamp.org/news/how-to-setup-virtual-environments-in-python/)
+  - To install needed packages, run: `pip install -r requirements.txt`
+  - Run the API by running the command: `uvicorn main:app --reload`
+  - Run migration by running the `run_migration.py` file by running `python run_migration.py` in the `src/api` directory.
+  - Run seeder on the api by going to the API base_url/seed. If the API is running on http://localhost:3000; then, run the seeder by visiting: `http://localhost:3000/seed` either through postman or just the browser
+
+- Dashboard
+  - Install all dependencies by running: `npm install`
+  - Run the dashboard app by running the command: `npm run dev`
+  - For the dashboard, for the test to run successfully, run on port 8000 or change the port in the `cypress.config.ts` to the port where the dashboard is running.
+
+## Run tests
+
+- Fast API: Run `pytest` when you are in the API main directory @`src/api`
+
+- NuxtJS: Run `npm run cypress:open` when you are in the Dashboard directory @`src/dashboard`

@@ -61,7 +61,7 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Session 
 def read_root():
   return {"Hello": "World"}
 
-@app.post("/seed")
+@app.get("/seed")
 def seed_database(db: Session = Depends(get_db)):
   crud.seed_users(db=db)
   crud.seed_authors(db=db)
