@@ -1,7 +1,7 @@
 import * as authMocks from "./mocks/auth";
 import * as appMocks from "./mocks/app";
 
-Cypress.Commands.add('login', () => {
+Cypress.Commands.add('login' as any, () => {
   cy.visit('/')
   
   cy.fixture("auth/login.json").then((res) => {
@@ -19,7 +19,7 @@ Cypress.Commands.add('login', () => {
   cy.get("[data-cy='login-btn']").click()
 
   cy.wait("@login").then((intercept) => {
-    expect(intercept.response.statusCode).to.equal(200);
+    expect(intercept?.response?.statusCode).to.equal(200);
     cy.url().should("include", "/authors");
   });
 })

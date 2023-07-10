@@ -14,16 +14,17 @@
                   v-model="filter"
                   type="search"
                   placeholder="Type to Search"
+                  data-cy="filter-search-input"
                 ></b-form-input>
     
                 <b-input-group-append>
-                  <b-button :disabled="!filter" @click="filter = ''">Clear</b-button>
+                  <b-button :disabled="!filter" @click="filter = ''" data-cy="clear-filter-btn">Clear</b-button>
                 </b-input-group-append>
               </b-input-group>
             </div>
             <div class="col-5"></div>
             <div class="col-2">
-              <b-button v-b-modal.add-book-modal>Add Book</b-button>
+              <b-button v-b-modal.add-book-modal data-cy="add-book-btn">Add Book</b-button>
             </div>
           </div>
         </div>
@@ -42,6 +43,7 @@
           :current-page="currentPage"
           @row-clicked="rowClicked"
           bordered
+          tbody-tr-class="books-table-row"
         >
         </b-table>
         <div class="row ml-auto">
@@ -80,6 +82,7 @@
               required
               v-model="book.name"
               :state="bookState"
+              data-cy="add-book-name-input"
             ></b-form-input>
           </b-form-group>
         </b-form>
@@ -98,6 +101,7 @@
               required
               v-model="book.pages"
               :state="numberOfPagesState"
+              data-cy="add-number-of-pages-input"
             ></b-form-input>
           </b-form-group>
         </b-form>
@@ -115,6 +119,7 @@
               placeholder="Select author..."
               v-model="author"
               required
+              data-cy="add-authors-dropdown"
             />
           </b-form-group>
         </b-form>
@@ -142,6 +147,7 @@
               required
               v-model="currentBookData.name"
               :state="editBookState"
+              data-cy="add-book-name-input"
             ></b-form-input>
           </b-form-group>
         </b-form>
@@ -160,6 +166,7 @@
               required
               v-model="currentBookData.number_of_pages"
               :state="editNumberOfPagesState"
+              data-cy="add-number-of-pages-input"
             ></b-form-input>
           </b-form-group>
         </b-form>
