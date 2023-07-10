@@ -6,16 +6,16 @@
 
     <b-collapse id="nav-collapse" is-nav v-if="isUserLoggedIn">
       <b-navbar-nav class="mx-auto">
-        <b-nav-item to="/authors">
+        <b-nav-item to="/authors" data-cy="authors-nav-link">
           Authors
         </b-nav-item>
-        <b-nav-item to="/books">
+        <b-nav-item to="/books" data-cy="books-nav-link">
           Books
         </b-nav-item>
       </b-navbar-nav>
 
       <b-navbar-nav class="ml-auto" v-if="isUserLoggedIn">
-        <b-button variant="dark" @click="logout">Logout</b-button>
+        <b-button variant="dark" @click="logout" data-cy="logout-btn">Logout</b-button>
       </b-navbar-nav>
     </b-collapse>
   </b-navbar>

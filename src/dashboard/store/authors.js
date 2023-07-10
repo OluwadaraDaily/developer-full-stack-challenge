@@ -3,7 +3,7 @@ import api from '../helpers/api'
 export const state = () => ({
   allAuthors: [],
   currentAuthor: {},
-  currentAuthorBooks: []
+  currentAuthorBooks: [],
 })
 
 export const getters = {

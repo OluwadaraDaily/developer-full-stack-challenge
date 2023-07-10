@@ -3,6 +3,7 @@ import { axios } from './axiosConfig';
 async function login(payload) {
   axios.defaults.headers.post["Content-Type"] = "multipart/form-data"
   const response = await axios.post("/token", payload)
+  axios.defaults.headers.post["Content-Type"] = "application/json"
   return response;
 }
 
@@ -31,7 +32,9 @@ async function updateAuthor(id, payload) {
 
 
 async function createAuthor(payload) {
+  console.log('PAYLOAD ->', payload)
   const response = await axios.post(`/authors`, payload)
+  console.log('RESPONSE ->', response)
   return response
 }
 

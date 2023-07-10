@@ -13,6 +13,7 @@
                   v-model="filter"
                   type="search"
                   placeholder="Type to Search"
+                  data-cy="filter-authors-input"
                 ></b-form-input>
     
                 <b-input-group-append>
@@ -22,7 +23,7 @@
             </div>
             <div class="col-5"></div>
             <div class="col-2">
-              <b-button v-b-modal.author-modal>Add Author</b-button>
+              <b-button v-b-modal.author-modal data-cy="add-author-btn">Add Author</b-button>
             </div>
           </div>
         </div>
@@ -37,6 +38,7 @@
           :per-page="perPage"
           :current-page="currentPage"
           @row-clicked="rowClicked"
+          tbody-tr-class="author-table-row"
           bordered
         ></b-table>
         <div class="row ml-auto">
@@ -75,6 +77,7 @@
               required
               v-model="authorsName"
               :state="authorsNameState"
+              data-cy="author-name-input"
             ></b-form-input>
           </b-form-group>
         </b-form>
@@ -101,6 +104,7 @@
               required
               v-model="currentAuthorData.name"
               :state="currentAuthorState"
+              data-cy="edit-author-name-input"
             ></b-form-input>
           </b-form-group>
         </b-form>
@@ -109,7 +113,7 @@
         <hr/>
         <b-row>
           <b-col class="ml-auto">
-            <b-button class="mt-2" v-b-modal.add-author-book-modal>Add Book</b-button>
+            <b-button class="mt-2" @click="openAddBookModal" data-cy="add-book-btn">Add Book</b-button>
           </b-col>
         </b-row>
 
@@ -121,6 +125,7 @@
           :fields="editAuthorBooksFields"
           class="mt-2"
           @row-clicked="bookRowClicked"
+          tbody-tr-class="author-books-table-row"
         >
         </b-table>
       </b-modal>
@@ -148,6 +153,7 @@
               required
               v-model="currentBook.name"
               :state="currentBookState"
+              data-cy="book-name-input"
             ></b-form-input>
 
             <b-form-input
@@ -186,6 +192,7 @@
                   invalid-feedback="Book name is required"
                   v-model="book.name"
                   :state="bookNameState"
+                  data-cy="add-book-name-input"
                 ></b-form-input>
               </b-form-group>
             </b-form>
@@ -203,6 +210,7 @@
                   required
                   v-model="book.pages"
                   :state="numberOfPagesState"
+                  data-cy="add-page-number-input"
                 ></b-form-input>
               </b-form-group>
             </b-form>
@@ -283,6 +291,7 @@ export default {
     resetEditBookModal() {
       this.currentBookState = null
       this.currentBook = {}
+      this.$bvModal.show('edit-modal')
     },
     resetAddAuthorBookModal() {
       this.book = {
@@ -291,6 +300,7 @@ export default {
       }
       this.bookNameState = null
       this.numberOfPagesState = null
+      this.$bvModal.show("edit-modal")
     },
 
     async handleAddAuthorModalOk(bvModalEvent) {
@@ -357,7 +367,7 @@ export default {
         return
       }
       const payload = {
-        id: this.currentAuthor.id,
+        id: this.currentAuthorData.id,
         ...this.book
       }
       await this.$store.dispatch("authors/createBook", payload)
@@ -386,6 +396,7 @@ export default {
       this.currentBook = bookResponse.data
 
       this.$bvModal.show('edit-book-modal')
+      this.$bvModal.hide('edit-modal')
     },
     async createBook() {
       // Exit when the form isn't valid
@@ -404,6 +415,10 @@ export default {
       }
       this.bookNameState = null
       this.numberOfPagesState = null
+    },
+    openAddBookModal() {
+      this.$bvModal.show("add-author-book-modal")
+      this.$bvModal.hide("edit-modal")
     }
   },
   computed: {

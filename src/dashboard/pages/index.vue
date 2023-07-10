@@ -32,7 +32,7 @@
       </b-form-group>
       <b-row>
         <b-col align-self="end">
-          <b-button variant="outline-primary" type="submit" data-cy="submit-login">Login</b-button>
+          <b-button variant="outline-primary" type="submit" data-cy="login-btn">Login</b-button>
         </b-col>
       </b-row>
     </b-form>
@@ -48,20 +48,22 @@ export default {
       form: {
         username: '',
         password: '',
-      },
-      baseUrl: process.env.NUXT_ENV_API_URL,
-      errorText: '',
-      showError: false
+      }
     }
   },
   methods: {
     async submitLoginForm() {
+      console.log('Here 1')
       let formData = new FormData()
       formData.append('username', this.form.username)
       formData.append('password', this.form.password)
-
+      
+      console.log('Here 2')
       const loginResponse = await this.$store.dispatch("login", formData)
+      console.log('Here 3')
+      console.log('loginResponse ->', loginResponse)
       if (loginResponse.isSuccess) {
+        console.log('Here 4')
         this.$router.push({ path: '/authors' })
       }
     }

@@ -32,6 +32,7 @@ export const actions = {
   async login({ commit }, payload) {
     try {
       const response = await api.login(payload)
+      console.log('LOGIN API RESPONSE ->', response)
       if (response.data.access_token) {
         localStorage.setItem('token', `Bearer ${response.data.access_token}`)
         axios.defaults.headers.common['Authorization'] = `${localStorage.getItem('token')}`;
