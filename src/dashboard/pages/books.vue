@@ -65,7 +65,7 @@
         title="Add Book"
         @show="resetModal"
         @hidden="resetModal"
-        @ok="handleAddBookModalOk"
+        @ok="handleModalOk($event, ['form1', 'form2', 'form3'], 'add-book')"
       >
         <b-form ref="form1">
           <b-form-group
@@ -73,7 +73,7 @@
             label="Book Name"
             label-for="input-1"
             invalid-feedback="Book name is required"
-            :state="bookState"
+            :state="states.form1.state"
           >
             <b-form-input
               id="input-1"
@@ -81,7 +81,7 @@
               placeholder="Book Name"
               required
               v-model="book.name"
-              :state="bookState"
+              :state="states.form1.state"
               data-cy="add-book-name-input"
             ></b-form-input>
           </b-form-group>
@@ -92,7 +92,7 @@
             label="Number of Pages"
             label-for="input-2"
             invalid-feedback="Number of pages is required"
-            :state="numberOfPagesState"
+            :state="states.form2.state"
           >
             <b-form-input
               id="input-2"
@@ -100,7 +100,7 @@
               placeholder="Pages"
               required
               v-model="book.pages"
-              :state="numberOfPagesState"
+              :state="states.form2.state"
               data-cy="add-number-of-pages-input"
             ></b-form-input>
           </b-form-group>
@@ -111,7 +111,7 @@
             label="Author"
             label-for="input-2"
             invalid-feedback="Author is required"
-            :state="authorState"
+            :state="states.form3.state"
           >
             <treeselect
               :multiple="false"
@@ -120,6 +120,7 @@
               v-model="author"
               required
               data-cy="add-authors-dropdown"
+              :state="states.form3.state"
             />
           </b-form-group>
         </b-form>
@@ -130,7 +131,7 @@
         id="edit-book-modal"
         title="Edit Book"
         @hidden="resetEditModal"
-        @ok="handleEditBookModalOk"
+        @ok="handleModalOk($event, ['form4', 'form5', 'form6'], 'edit-book')"
       >
         <b-form ref="form4">
           <b-form-group
@@ -138,7 +139,7 @@
             label="Book Name"
             label-for="input-1"
             invalid-feedback="Book name is required"
-            :state="editBookState"
+            :state="states.form4.state"
           >
             <b-form-input
               id="input-1"
@@ -146,7 +147,7 @@
               placeholder="Book Name"
               required
               v-model="currentBookData.name"
-              :state="editBookState"
+              :state="states.form4.state"
               data-cy="add-book-name-input"
             ></b-form-input>
           </b-form-group>
@@ -157,7 +158,7 @@
             label="Number of Pages"
             label-for="input-2"
             invalid-feedback="Number of pages is required"
-            :state="editNumberOfPagesState"
+            :state="states.form5.state"
           >
             <b-form-input
               id="input-2"
@@ -165,7 +166,7 @@
               placeholder="Pages"
               required
               v-model="currentBookData.number_of_pages"
-              :state="editNumberOfPagesState"
+              :state="states.form5.state"
               data-cy="add-number-of-pages-input"
             ></b-form-input>
           </b-form-group>
@@ -176,7 +177,7 @@
             label="Author"
             label-for="input-2"
             invalid-feedback="Author is required"
-            :state="editAuthorState"
+            :state="states.form6.state"
           >
             <treeselect
               :multiple="false"
@@ -221,6 +222,26 @@ export default {
         name: '',
         pages: 0
       },
+      states: {
+        form1: {
+          state: null
+        },
+        form2: {
+          state: null
+        },
+        form3: {
+          state: null
+        },
+        form4: {
+          state: null
+        },
+        form5: {
+          state: null
+        },
+        form6: {
+          state: null
+        }
+      },
       numberOfPagesState: null,
       author: null,
       authorState: null,
@@ -253,11 +274,22 @@ export default {
 
       return validForm4 && validForm5 && validForm6
     },
+    checkFormValidity(refTags) {
+      let validity = true
+      for (const refTag of refTags) {
+        const valid = this.$refs[`${refTag}`].checkValidity()
+        this.states[`${refTag}`].state = valid
+        validity = validity && valid
+      }
+      return validity
+    },
+
     async rowClicked(item, index, event) {
       this.currentBookData = {...item}
 
       this.$bvModal.show('edit-book-modal')
     },
+
     resetModal() {
       this.book = {
         name: '',
@@ -273,20 +305,28 @@ export default {
       this.editBookState = null
       this.editNumberOfPagesState = null
     },
-    async handleAddBookModalOk(bvModalEvent) {
-      // Prevent modal from closing & Trigger submit handler
-      bvModalEvent.preventDefault()
-      await this.handleAddBookSubmit()
-    },
-    async handleEditBookModalOk(bvModalEvent) {
-      // Prevent modal from closing & Trigger submit handler
-      bvModalEvent.preventDefault()
-      await this.handleEditBookSubmit()
-    },
-    async handleAddBookSubmit() {
-      if (!this.checkAddBookFormValidity()) {
+
+    async handleModalOk(event, refTags, type) {
+      // Prevent modal from closing & trigger submit handler
+      event.preventDefault();
+      if (!this.checkFormValidity(refTags)) {
         return
       }
+      switch (type) {
+        case 'edit-book':
+          await this.handleEditBookSubmit(refTags)
+          return;
+
+        case 'add-book':
+          await this.handleAddBookSubmit(refTags)
+          return;
+
+        default:
+          return; 
+      }
+    },
+
+    async handleAddBookSubmit() {
       // Create new Book
       const payload = {
         authorId: this.author,
@@ -297,9 +337,6 @@ export default {
       this.$bvModal.hide('add-book-modal')
     },
     async handleEditBookSubmit() {
-      if (!this.checkEditBookFormValidity()) {
-        return
-      }
       // Update Book
       const payload = {
         authorId: this.currentBookData.author_id,

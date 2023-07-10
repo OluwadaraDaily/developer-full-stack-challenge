@@ -440,7 +440,7 @@ export default {
       return this.$store.getters["authors/getCurrentAuthor"]
     },
     rows() {
-      return this.$store.getters["authors/getAllAuthors"].length
+      return this.authorsList.length
     }
   },
   async fetch() {
